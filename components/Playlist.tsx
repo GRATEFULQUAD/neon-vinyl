@@ -1,9 +1,10 @@
 "use client";
 
-import type { Track } from "@/lib/tracks";
+import type { LocalTrack } from "@/lib/localLibrary";
+import { accentFor } from "@/lib/localLibrary";
 
 interface PlaylistProps {
-  tracks: Track[];
+  tracks: LocalTrack[];
   currentIndex: number;
   isPlaying: boolean;
   onSelect: (index: number) => void;
@@ -24,7 +25,7 @@ export function Playlist({ tracks, currentIndex, isPlaying, onSelect }: Playlist
               type="button"
               key={track.id}
               className={`playlist-row ${active ? "playlist-row-active" : ""}`}
-              style={{ "--row-color": track.color } as React.CSSProperties}
+              style={{ "--row-color": accentFor(i) } as React.CSSProperties}
               onClick={() => onSelect(i)}
             >
               <span className="playlist-row-index">
@@ -38,7 +39,6 @@ export function Playlist({ tracks, currentIndex, isPlaying, onSelect }: Playlist
               </span>
               <span className="playlist-row-info">
                 <span className="playlist-row-title">{track.title}</span>
-                <span className="playlist-row-artist">{track.artist}</span>
               </span>
             </button>
           );

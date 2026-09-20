@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
-import type { Track } from "@/lib/tracks";
 
 interface RecordPlayerProps {
-  track: Track;
+  albumArtUrl: string | null;
+  accentColor: string;
   isPlaying: boolean;
   progress: number; // 0..1
 }
@@ -20,7 +20,8 @@ function mulberry32(seed: number) {
 }
 
 // Generate a stable set of tiny speckle dots scattered across the vinyl
-// surface, like flecks baked into colored vinyl pressings.
+// surface, like flecks baked into colored vinyl pressings. Only used on the
+// plain black disc (no album art supplied).
 function useSpeckles(seed: number, count: number) {
   return useMemo(() => {
     const rand = mulberry32(seed);
@@ -39,43 +40,66 @@ function useSpeckles(seed: number, count: number) {
   }, [seed, count]);
 }
 
-// Resting angle keeps the tonearm swung away, off the disc, near its cradle.
+// Resting angle keeps the playhead swung away, off the disc, near its cradle.
 // Playing angle swings it onto the record; it creeps further inward as the
 // track progresses, mimicking a needle tracking toward the label.
 const REST_ANGLE = -8;
 const PLAY_ANGLE = 42;
 const MAX_CREEP = 8;
 
-export function RecordPlayer({ track, isPlaying, progress }: RecordPlayerProps) {
+export function RecordPlayer({ albumArtUrl, accentColor, isPlaying, progress }: RecordPlayerProps) {
   const speckles = useSpeckles(7, 140);
   const angle = isPlaying ? PLAY_ANGLE + progress * MAX_CREEP : REST_ANGLE;
 
   return (
     <div className="turntable">
       <div className="turntable-plinth">
-        <div className={`vinyl-disc ${isPlaying ? "vinyl-spinning" : ""}`}>
-          <svg viewBox="0 0 100 100" className="vinyl-grooves" aria-hidden="true">
-            {Array.from({ length: 16 }).map((_, i) => (
-              <circle
-                key={i}
-                cx="50"
-                cy="50"
-                r={12 + i * 2.2}
-                fill="none"
-                stroke="rgba(255,255,255,0.05)"
-                strokeWidth="0.35"
-              />
-            ))}
-          </svg>
-          <svg viewBox="0 0 100 100" className="vinyl-speckles" aria-hidden="true">
-            {speckles.map((s, i) => (
-              <circle key={i} cx={s.x} cy={s.y} r={s.r} fill={`rgba(var(--track-color),${s.o})`} />
-            ))}
-          </svg>
-          <div className="vinyl-label" style={{ "--track-color": track.color } as React.CSSProperties}>
-            <span className="vinyl-label-title">{track.title}</span>
-            <span className="vinyl-label-artist">{track.artist}</span>
-          </div>
+        <div
+          className={`vinyl-disc ${isPlaying ? "vinyl-spinning" : ""} ${albumArtUrl ? "vinyl-disc-art" : ""}`}
+          style={
+            {
+              "--track-color": accentColor,
+              backgroundImage: albumArtUrl ? `url(${albumArtUrl})` : undefined,
+            } as React.CSSProperties
+          }
+        >
+          {!albumArtUrl && (
+            <>
+              <svg viewBox="0 0 100 100" className="vinyl-grooves" aria-hidden="true">
+                {Array.from({ length: 16 }).map((_, i) => (
+                  <circle
+                    key={i}
+                    cx="50"
+                    cy="50"
+                    r={12 + i * 2.2}
+                    fill="none"
+                    stroke="rgba(255,255,255,0.05)"
+                    strokeWidth="0.35"
+                  />
+                ))}
+              </svg>
+              <svg viewBox="0 0 100 100" className="vinyl-speckles" aria-hidden="true">
+                {speckles.map((s, i) => (
+                  <circle key={i} cx={s.x} cy={s.y} r={s.r} fill={`rgba(var(--track-color),${s.o})`} />
+                ))}
+              </svg>
+            </>
+          )}
+          {albumArtUrl && (
+            <svg viewBox="0 0 100 100" className="vinyl-grooves vinyl-grooves-art" aria-hidden="true">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <circle
+                  key={i}
+                  cx="50"
+                  cy="50"
+                  r={38 - i * 3.2}
+                  fill="none"
+                  stroke="rgba(0,0,0,0.18)"
+                  strokeWidth="0.4"
+                />
+              ))}
+            </svg>
+          )}
           <div className="vinyl-spindle" />
         </div>
 
